@@ -97,49 +97,6 @@ static NSString * const kMPLeanplumEmailUserAttributeKey = @"email";
     
     dispatch_once(&kitPredicate, ^{
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onUserIdentified:) name:mParticleIdentityStateChangeListenerNotification object:nil];
-        if ([MParticle sharedInstance].environment == MPEnvironmentDevelopment) {
-            LEANPLUM_USE_ADVERTISING_ID;
-            [Leanplum setAppId:self.configuration[@"appId"] withDevelopmentKey:self.configuration[@"clientKey"]];
-        }
-        else {
-            [Leanplum setAppId:self.configuration[@"appId"] withProductionKey:self.configuration[@"clientKey"]];
-        }
-        
-        NSString *deviceIdType = self.configuration[@"iosDeviceId"];
-        if (deviceIdType == nil) {
-            deviceIdType = @"";
-        }
-        if ([deviceIdType isEqualToString:@"idfa"]) {
-            LEANPLUM_USE_ADVERTISING_ID;
-        } else if ([deviceIdType isEqualToString:@"das"]) {
-            [Leanplum setDeviceId:[MParticle sharedInstance].identity.deviceApplicationStamp];
-        }
-        
-        FilteredMParticleUser *user = [self currentUser];
-        NSString *userId = [self generateUserId:self.configuration
-                                           user:user];
-        
-        NSString *email = [user.userIdentities objectForKey:[NSNumber numberWithInt:MPUserIdentityEmail]];
-        
-        NSDictionary<NSString *, id> *attributes = user.userAttributes;
-        if (email != nil) {
-            if (attributes == nil) {
-                attributes = [NSMutableDictionary dictionary];
-            }
-            [attributes setValue:email forKey:kMPLeanplumEmailUserAttributeKey];
-        }
-        if (userId && attributes) {
-            [Leanplum startWithUserId:userId userAttributes:attributes];
-        }
-        else if (attributes) {
-            [Leanplum startWithUserAttributes:attributes];
-        }
-        else if (userId) {
-            [Leanplum startWithUserId:userId];
-        }
-        else {
-            [Leanplum start];
-        }
         
         _started = YES;
         
